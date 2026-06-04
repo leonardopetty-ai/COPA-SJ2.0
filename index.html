@@ -1272,57 +1272,35 @@ function getUberFallback(loc){
 
 
 /* ── LEMBRETE VIA .ICS ── */
-function makeICS(title, dateStr, timeStr, where, cat){
-  // dateStr: "2026-06-13", timeStr: "19h00"
-  const match = timeStr && timeStr.match(/^(\d{1,2})h(\d{2})?/);
-  if(!match) return null;
-  const hh = String(parseInt(match[1])).padStart(2,'0');
-  const mm = String(parseInt(match[2]||'0')).padStart(2,'0');
-  // Data no formato YYYYMMDD
-  const dateParts = dateStr.split('-');
-  const dtStart = dateParts[0]+dateParts[1]+dateParts[2]+'T'+hh+mm+'00';
-  // Calcular -15min para VALARM
-  const totalMin = parseInt(hh)*60+parseInt(mm)-15;
-  const alarmH = String(Math.floor(Math.abs(totalMin)/60)).padStart(2,'0');
-  const alarmM = String(Math.abs(totalMin)%60).padStart(2,'0');
-  const alarmDT = dateParts[0]+dateParts[1]+dateParts[2]+'T'+alarmH+alarmM+'00';
-
-  const uid = 'junho2026-'+Date.now()+'@app';
-  const ics = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//Junho2026//Recife//PT',
-    'BEGIN:VEVENT',
-    'UID:'+uid,
-    'DTSTART:'+dtStart,
-    'DTEND:'+dtStart, // mesmo horário, duração 0 — o alerta é o que importa
-    'SUMMARY:'+title.replace(/,/g,'\,'),
-    'DESCRIPTION:'+( where ? where.replace(/,/g,'\,') : cat ),
-    'BEGIN:VALARM',
-    'TRIGGER:-PT15M',
-    'ACTION:DISPLAY',
-    'DESCRIPTION:⏱ Vai começar! '+title.replace(/,/g,'\,'),
-    'END:VALARM',
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].join('\r\n');
-
-  return ics;
-}
-
 function createReminder(title, dayNum, timeStr, where, cat){
-  if(!timeStr || timeStr==='A confirmar' || !timeStr.match(/^\d{1,2}h/)) return;
-  const month = String(dayNum).padStart(2,'0');
-  const dateStr = '2026-06-'+month;
-  const ics = makeICS(title, dateStr, timeStr, where, cat);
-  if(!ics) return;
-  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url;
-  a.download = 'lembrete-junho2026.ics';
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+  if(!timeStr || !dayNum || timeStr==='A confirmar') return;
+  const match = timeStr.match(/^(\d{1,2})h(\d{2})?/);
+  if(!match) return;
+
+  const hh  = String(parseInt(match[1])).padStart(2,'0');
+  const mm  = String(parseInt(match[2]||'0')).padStart(2,'0');
+  const day = String(dayNum).padStart(2,'0');
+
+  // Google Calendar datetime format: YYYYMMDDTHHmmss
+  const dateBase = '202606'+day;
+  const start    = dateBase+'T'+hh+mm+'00';
+  const endHH    = String((parseInt(hh)+2)%24).padStart(2,'0');
+  const end      = dateBase+'T'+endHH+mm+'00';
+
+  const details  = where || cat || '';
+
+  // Google Calendar URL com lembrete de 15min via popup
+  const params = new URLSearchParams({
+    action:  'TEMPLATE',
+    text:    title,
+    dates:   start+'/'+end,
+    details: details,
+    sf:      'true',
+    output:  'xml',
+  });
+
+  const url = 'https://calendar.google.com/calendar/render?'+params.toString()+'&add=popups&reminder=15';
+  window.open(url, '_blank', 'noopener');
 }
 
 /* ── MODAL ── */
