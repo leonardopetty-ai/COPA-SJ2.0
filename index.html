@@ -714,6 +714,7 @@ body {
 }
 .modal-btn:active { transform:scale(0.97);opacity:0.85; }
 .btn-cazeTv { background:#FF0000;color:#fff; }
+.btn-getv   { background:#00B4CC;color:#fff; }
 .btn-uber   { background:#000;color:#fff;border:1px solid var(--b2); }
 .btn-cancel  { background:transparent;color:var(--t2);border:1px solid var(--b1);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none; }
 .btn-reminder{ background:var(--s3);color:var(--t1);border:1px solid var(--b2); }
@@ -1327,7 +1328,7 @@ function createReminder(title, dayNum, timeStr, where, cat){
 /* ── MODAL ── */
 let modalOpen = false;
 
-function openModal(cat, title, ev_time, where, isCopa, isSJ){
+function openModal(cat, title, ev_time, where, isCopa, isSJ, isVNL){
   const overlay = document.getElementById('modal-overlay');
   const catEl   = document.getElementById('modal-cat');
   const evEl    = document.getElementById('modal-event');
@@ -1341,9 +1342,16 @@ function openModal(cat, title, ev_time, where, isCopa, isSJ){
   actions.innerHTML  = '';
 
   if(isCopa){
-    actions.innerHTML = `
+    actions.innerHTML += `
       <a class="modal-btn btn-cazeTv" href="https://www.youtube.com/@CazeTV" target="_blank" rel="noopener">
-        ▶ Assistir ao vivo na CazéTV
+        ▶ Assistir ao vivo — CazéTV
+      </a>`;
+  }
+
+  if(isVNL){
+    actions.innerHTML += `
+      <a class="modal-btn btn-getv" href="https://www.youtube.com/@getv" target="_blank" rel="noopener">
+        ▶ Assistir no YouTube — GE TV
       </a>`;
   }
 
@@ -1357,12 +1365,14 @@ function openModal(cat, title, ev_time, where, isCopa, isSJ){
     }
   }
 
-  // Botão lembrete — só se tiver horário definido
-  const hasTime = ev_time && ev_time.match(/^\d{1,2}h/) && ev_time!=='A confirmar';
+  // Botão lembrete — qualquer evento com horário definido
+  const hasTime = ev_time && /^\d{1,2}h/.test(ev_time) && ev_time !== 'A confirmar';
   if(hasTime){
-    const dayNum = window._lastModalDay||null;
+    const dayNum = window._lastModalDay || 0;
+    const safeTitle = title.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const safeWhere = (where||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
     actions.innerHTML += `
-      <button class="modal-btn btn-reminder" onclick="createReminder('${title.replace(/'/g,"\\'")}',${dayNum||0},'${ev_time}','${(where||'').replace(/'/g,"\\'")}','${catLabel}');closeModal()">
+      <button class="modal-btn btn-reminder" onclick="createReminder('${safeTitle}',${dayNum},'${ev_time}','${safeWhere}','${cat}');closeModal()">
         🔔 Criar lembrete (15min antes)
       </button>`;
   }
@@ -1543,11 +1553,17 @@ function makeEC(ev){
 
   const isCopa = ev.cat==='copa';
   const isSJ   = ev.cat==='sj';
+  const isVNL  = ev.cat==='vnl';
   const hasSJLoc = isSJ && findLocation(ev.where||'');
-  const clickable = (isCopa || hasSJLoc);
-  const catLabel = DS[ev.cat]?.label||ev.cat;
+  const hasTime  = ev.time && /^\d{1,2}h/.test(ev.time) && ev.time !== 'A confirmar';
+  // Clicável se: Copa, VNL, SJ com local, ou qualquer evento com horário definido
+  const clickable = (isCopa || isVNL || hasSJLoc || hasTime);
+  const catLabel = DS[ev.cat]?.label || ev.cat;
+  const safeTitle = (ev.title||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/`/g,'\\`');
+  const safeTime  = (ev.time||'').replace(/'/g,"\\'");
+  const safeWhere = (ev.where||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const onclk = clickable
-    ? `onclick="window._lastModalDay=${'{'}window._currentDay||0{'}'};openModal('${catLabel.replace(/'/g,"\\'")}','${ev.title.replace(/'/g,"\\'").replace(/`/g,"\\`")}','${(ev.time||'').replace(/'/g,"\\'")}','${(ev.where||'').replace(/'/g,"\\'")}',${isCopa},${isSJ})"`
+    ? `onclick="window._lastModalDay=window._currentDay||0;openModal('${catLabel}','${safeTitle}','${safeTime}','${safeWhere}',${isCopa},${isSJ},${isVNL})"`
     : '';
   return `<div class="${cls}${clickable?' ec-clickable':''}" ${onclk} style="${clickable?'cursor:pointer':''}">
     <div class="ec-bar" style="background:${barColor}"></div>
