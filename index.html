@@ -715,8 +715,8 @@ body {
 .modal-btn:active { transform:scale(0.97);opacity:0.85; }
 .btn-cazeTv { background:#FF0000;color:#fff; }
 .btn-uber   { background:#000;color:#fff;border:1px solid var(--b2); }
-.btn-99     { background:#F2C94C;color:#000; }
-.btn-cancel { background:transparent;color:var(--t2);border:1px solid var(--b1);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none; }
+.btn-cancel  { background:transparent;color:var(--t2);border:1px solid var(--b1);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none; }
+.btn-reminder{ background:var(--s3);color:var(--t1);border:1px solid var(--b2); }
 
 /* ═══════════════════════════════════
    GRAFISMOS TEMÁTICOS
@@ -879,14 +879,7 @@ body {
 
   </div>
 
-  <!-- ═══ HOJE ═══ -->
-  <div class="hoje-wrap" id="sec-hoje">
-    <div class="hoje-title-big">Hoje</div>
-    <div class="hoje-date-big" id="hj-date">—</div>
-    <div class="hoje-count" id="hj-count">—</div>
-    <div class="hoje-events-list" id="hj-list"></div>
-    <div class="hoje-no-events" id="hj-empty" style="display:none">Dia livre 🛋️</div>
-  </div></div>
+</div>
 
 <!-- ═══ MODAL ═══ -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
@@ -903,9 +896,8 @@ body {
 </div>
 
 <!-- ═══ NAV ═══ -->
-<div class="bottom-nav">
-  <button class="nav-btn active" id="nav-cal"   onclick="goSection('cal')"><span class="nav-icon">📅</span><span class="nav-label">Calendário</span></button>
-  <button class="nav-btn"        id="nav-hoje"  onclick="goSection('hoje')"><span class="nav-icon">⚡</span><span class="nav-label">Hoje</span></button>
+<div class="bottom-nav" style="justify-content:center">
+  <button class="nav-btn active" id="nav-cal" onclick="goSection('cal')"><span class="nav-icon">📅</span><span class="nav-label">Calendário</span></button>
 </div>
 
 <script>
@@ -1275,17 +1267,67 @@ function getUberLink(loc){
 function getUberFallback(loc){
   return 'https://m.uber.com/ul/?action=setPickup&dropoff[formatted_address]='+encodeURIComponent(loc.addr)+'&dropoff[nickname]='+encodeURIComponent(loc.name);
 }
-function get99Link(loc){
-  return '99app://request?dest_name='+encodeURIComponent(loc.name)+'&dest_address='+encodeURIComponent(loc.addr);
+
+
+
+/* ── LEMBRETE VIA .ICS ── */
+function makeICS(title, dateStr, timeStr, where, cat){
+  // dateStr: "2026-06-13", timeStr: "19h00"
+  const match = timeStr && timeStr.match(/^(\d{1,2})h(\d{2})?/);
+  if(!match) return null;
+  const hh = String(parseInt(match[1])).padStart(2,'0');
+  const mm = String(parseInt(match[2]||'0')).padStart(2,'0');
+  // Data no formato YYYYMMDD
+  const dateParts = dateStr.split('-');
+  const dtStart = dateParts[0]+dateParts[1]+dateParts[2]+'T'+hh+mm+'00';
+  // Calcular -15min para VALARM
+  const totalMin = parseInt(hh)*60+parseInt(mm)-15;
+  const alarmH = String(Math.floor(Math.abs(totalMin)/60)).padStart(2,'0');
+  const alarmM = String(Math.abs(totalMin)%60).padStart(2,'0');
+  const alarmDT = dateParts[0]+dateParts[1]+dateParts[2]+'T'+alarmH+alarmM+'00';
+
+  const uid = 'junho2026-'+Date.now()+'@app';
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Junho2026//Recife//PT',
+    'BEGIN:VEVENT',
+    'UID:'+uid,
+    'DTSTART:'+dtStart,
+    'DTEND:'+dtStart, // mesmo horário, duração 0 — o alerta é o que importa
+    'SUMMARY:'+title.replace(/,/g,'\,'),
+    'DESCRIPTION:'+( where ? where.replace(/,/g,'\,') : cat ),
+    'BEGIN:VALARM',
+    'TRIGGER:-PT15M',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:⏱ Vai começar! '+title.replace(/,/g,'\,'),
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  return ics;
 }
-function get99Fallback(loc){
-  return 'https://99app.com/';
+
+function createReminder(title, dayNum, timeStr, where, cat){
+  if(!timeStr || timeStr==='A confirmar' || !timeStr.match(/^\d{1,2}h/)) return;
+  const month = String(dayNum).padStart(2,'0');
+  const dateStr = '2026-06-'+month;
+  const ics = makeICS(title, dateStr, timeStr, where, cat);
+  if(!ics) return;
+  const blob = new Blob([ics], {type:'text/calendar;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'lembrete-junho2026.ics';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
 /* ── MODAL ── */
 let modalOpen = false;
 
-function openModal(cat, title, time, where, isCopa, isSJ){
+function openModal(cat, title, ev_time, where, isCopa, isSJ){
   const overlay = document.getElementById('modal-overlay');
   const catEl   = document.getElementById('modal-cat');
   const evEl    = document.getElementById('modal-event');
@@ -1295,7 +1337,7 @@ function openModal(cat, title, time, where, isCopa, isSJ){
 
   catEl.textContent  = cat;
   evEl.textContent   = title;
-  timeEl.textContent = time ? '⏱ '+time : '';
+  timeEl.textContent = ev_time ? '⏱ '+ev_time : '';
   actions.innerHTML  = '';
 
   if(isCopa){
@@ -1311,11 +1353,18 @@ function openModal(cat, title, time, where, isCopa, isSJ){
       actions.innerHTML += `
         <a class="modal-btn btn-uber" href="${getUberLink(loc)}" onclick="tryApp(event,'${getUberFallback(loc)}')">
           🚗 Pedir Uber para ${loc.name}
-        </a>
-        <a class="modal-btn btn-99" href="${get99Link(loc)}" onclick="tryApp(event,'${get99Fallback(loc)}')">
-          🚕 Pedir 99 para ${loc.name}
         </a>`;
     }
+  }
+
+  // Botão lembrete — só se tiver horário definido
+  const hasTime = ev_time && ev_time.match(/^\d{1,2}h/) && ev_time!=='A confirmar';
+  if(hasTime){
+    const dayNum = window._lastModalDay||null;
+    actions.innerHTML += `
+      <button class="modal-btn btn-reminder" onclick="createReminder('${title.replace(/'/g,"\\'")}',${dayNum||0},'${ev_time}','${(where||'').replace(/'/g,"\\'")}','${catLabel}');closeModal()">
+        🔔 Criar lembrete (15min antes)
+      </button>`;
   }
 
   if(!actions.innerHTML.trim()){
@@ -1364,11 +1413,14 @@ const COUNTRY_FLAGS = {
   'Polônia':'🇵🇱','China':'🇨🇳','Tailândia':'🇹🇭','Alemanha':'🇩🇪',
 };
 
-function getEventStatus(timeStr){
-  if(!timeStr || timeStr==='A confirmar' || timeStr==='Dia todo' || timeStr==='Varia') return 'normal';
+function getEventStatus(timeStr, dayNum){
+  // Só aplica status temporal no dia de hoje
+  if(!dayNum || dayNum !== TODAY) return 'normal';
+  if(!timeStr || timeStr==='A confirmar' || timeStr==='Dia todo' || timeStr==='Varia'
+     || timeStr.startsWith('A partir') || timeStr.startsWith('Varia')) return 'normal';
   const now = new Date();
-  // só aplica no dia de hoje
-  if(now.getFullYear()!==2026||now.getMonth()!==5) return 'normal';
+  if(now.getFullYear()!==2026 || now.getMonth()!==5) return 'normal';
+  if(now.getDate() !== dayNum) return 'normal';
   const match = timeStr.match(/^(\d{1,2})h(\d{2})?/);
   if(!match) return 'normal';
   const h = parseInt(match[1]);
@@ -1468,7 +1520,7 @@ function getFlagSVG(country){
 
 function makeEC(ev){
   const d=DS[ev.cat]||{color:'#888',bg:'rgba(136,136,136,0.1)'};
-  const evStatus=getEventStatus(ev.time||'');
+  const evStatus=getEventStatus(ev.time||'', window._currentDay||null);
   let cls='ec';
   if(evStatus==='now')  cls+=' ev-now';
   if(evStatus==='soon') cls+=' ev-soon';
@@ -1495,7 +1547,7 @@ function makeEC(ev){
   const clickable = (isCopa || hasSJLoc);
   const catLabel = DS[ev.cat]?.label||ev.cat;
   const onclk = clickable
-    ? `onclick="openModal('${catLabel.replace(/'/g,"\\'")}','${ev.title.replace(/'/g,"\\'").replace(/`/g,"\\`")}','${(ev.time||'').replace(/'/g,"\\'")}','${(ev.where||'').replace(/'/g,"\\'")}',${isCopa},${isSJ})"`
+    ? `onclick="window._lastModalDay=${'{'}window._currentDay||0{'}'};openModal('${catLabel.replace(/'/g,"\\'")}','${ev.title.replace(/'/g,"\\'").replace(/`/g,"\\`")}','${(ev.time||'').replace(/'/g,"\\'")}','${(ev.where||'').replace(/'/g,"\\'")}',${isCopa},${isSJ})"`
     : '';
   return `<div class="${cls}${clickable?' ec-clickable':''}" ${onclk} style="${clickable?'cursor:pointer':''}">
     <div class="ec-bar" style="background:${barColor}"></div>
@@ -1681,6 +1733,7 @@ function render(fromFilter=false){
       dc.style.animationDelay=(idx*0.025)+'s';
       idx++;
       const hasBr=evts.some(e=>e.brasil);
+      window._currentDay=d;
       const evHTML=evts.length
         ? makeCompBlocks(evts)
         : '<div style="font-size:12px;color:var(--t3);font-style:italic;padding:4px 0">Sem eventos nesta categoria</div>';
@@ -1739,14 +1792,8 @@ function renderHoje(){
 }
 
 function goSection(s){
-  ['cal','hoje'].forEach(id=>{
-    const el=document.getElementById('sec-'+id);
-    if(!el) return;
-    if(id==='cal'){ el.style.display=s==='cal'?'block':'none'; }
-    else { el.style.display=s===id?'block':'none'; }
-    document.getElementById('nav-'+id)?.classList.toggle('active',id===s);
-  });
-  if(s==='hoje') renderHoje();
+  const el=document.getElementById('sec-cal');
+  if(el) el.style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -1758,7 +1805,6 @@ document.querySelector('.fb[data-cat="all"]').style.cssText='background:#111111;
 
 render();
 renderTodayPanel();
-renderHoje();
 
 // ── SCROLL COLLAPSE ──
 (function(){
