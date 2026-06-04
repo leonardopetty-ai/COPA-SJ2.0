@@ -72,7 +72,7 @@
    RESET & BASE
 ═══════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { background: var(--s0); scroll-behavior: smooth; }
+html { background: var(--s0); }
 body {
   font-family: 'Barlow', system-ui, sans-serif;
   background: var(--s0);
@@ -144,8 +144,8 @@ body {
    APP LAYOUT
 ═══════════════════════════════════ */
 .app {
-  max-width: 430px; margin: 0 auto;
-  padding-bottom: calc(80px + var(--sab));
+  max-width: 100%;
+  padding-bottom: calc(24px + var(--sab));
 }
 
 /* ═══════════════════════════════════
@@ -158,84 +158,9 @@ body {
   padding: calc(var(--sat) + 14px) var(--sp2) 14px;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.15);
-  transition: padding 0.35s cubic-bezier(0.4,0,0.2,1),
-              border-radius 0.35s cubic-bezier(0.4,0,0.2,1);
-  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.12);
 }
 
-/* Estado compacto */
-.today-panel.compact {
-  padding: calc(var(--sat) + 6px) var(--sp2) 6px;
-  border-bottom-left-radius: 14px;
-  border-bottom-right-radius: 14px;
-}
-
-/* Mini bar */
-.mini-bar {
-  overflow: hidden;
-  max-height: 0;
-  opacity: 0;
-  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.25s ease;
-}
-.today-panel.compact .mini-bar {
-  max-height: 40px;
-  opacity: 1;
-}
-.mini-accent {
-  height: 2px; width: 100%; margin-bottom: 6px;
-  border-radius: 2px;
-  transition: background 0.4s ease;
-}
-.mini-content {
-  display: flex; align-items: center; gap: 8px;
-  padding: 0 2px;
-}
-.mini-day {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px; font-weight: 700; letter-spacing: 1px;
-  color: #999; text-transform: uppercase; flex-shrink: 0;
-}
-.mini-event {
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px; font-weight: 700; color: #111;
-  flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  letter-spacing: 0.2px;
-}
-.mini-time {
-  font-size: 11px; font-weight: 500; color: #888;
-  flex-shrink: 0;
-}
-
-/* Conteúdo completo */
-.panel-full {
-  overflow: hidden;
-  max-height: 600px;
-  opacity: 1;
-  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.3s ease;
-}
-.today-panel.compact .panel-full {
-  max-height: 0;
-  opacity: 0;
-}
-
-/* Filtros: fade-out ao compactar */
-#filters-section {
-  overflow: hidden;
-  max-height: 200px;
-  opacity: 1;
-  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.25s ease,
-              margin-top 0.3s ease;
-}
-.today-panel.compact #filters-section {
-  max-height: 0;
-  opacity: 0;
-  margin-top: 0;
-  pointer-events: none;
-}
 
 /* Faixa de cor da competição do dia */
 .today-accent {
@@ -594,26 +519,7 @@ body {
 }
 .ec.ec-sj .ec-title { color: #f08040; }
 
-/* ═══════════════════════════════════
-   BOTTOM NAV
-═══════════════════════════════════ */
-.bottom-nav {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-  background: rgba(8,8,8,0.95);
-  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid rgba(255,255,255,0.1);
-  display: flex; justify-content: space-around; align-items: center;
-  padding: 10px 0 calc(10px + var(--sab));
-  width: 100%;
-}
-.nav-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  cursor: pointer; padding: 10px 20px; min-height: 44px; border-radius: 8px;
-  transition: all 0.15s; user-select: none;
-  border: none; background: none; color: var(--t3);
-}
-.nav-btn.active { color: var(--c-yellow); }
-.nav-btn:active { transform: scale(0.9); }
+
 .nav-icon { font-size: 18px; line-height: 1; }
 .nav-label {
   font-family: 'Barlow Condensed', sans-serif;
@@ -806,6 +712,104 @@ body {
 .events-animating-out { animation: events-out 0.15s ease forwards; }
 .events-animating-in  { animation: events-in  0.22s cubic-bezier(0.25,0.46,0.45,0.94) both; }
 .pills-animating { animation: pills-in 0.2s ease both; }
+
+/* ── FAB FILTROS ── */
+.fab-filter {
+  position: fixed;
+  bottom: calc(24px + var(--sab));
+  right: 16px;
+  z-index: 300;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #F4F4F6;
+  border: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  -webkit-tap-highlight-color: transparent;
+  /* Oculto por padrão — aparece só quando menu colapsado */
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7) translateY(8px);
+  transition: opacity 0.3s ease,
+              transform 0.3s cubic-bezier(0.34,1.4,0.64,1),
+              box-shadow 0.2s;
+}
+.fab-filter.fab-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1) translateY(0);
+}
+.fab-filter.fab-visible:active { transform: scale(0.92); }
+.fab-filter.open { transform: scale(1) rotate(45deg); }
+
+/* Painel flutuante */
+.filter-panel {
+  position: fixed;
+  bottom: calc(82px + var(--sab));
+  right: 12px;
+  z-index: 299;
+  background: #F4F4F6;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.15);
+  padding: 12px;
+  width: 200px;
+  opacity: 0;
+  transform: scale(0.85) translateY(12px);
+  transform-origin: bottom right;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.25s cubic-bezier(0.34,1.2,0.64,1);
+}
+.filter-panel.open {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+.filter-panel-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: #aaa;
+  margin-bottom: 8px;
+}
+.filter-panel .fp-btn {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #555; cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.filter-panel .fp-btn:last-child { margin-bottom: 0; }
+.filter-panel .fp-btn.on { color: #fff; border-color: transparent; }
+.filter-panel .fp-btn .fp-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+/* Overlay transparente para fechar ao clicar fora */
+.filter-overlay {
+  position: fixed; inset: 0; z-index: 298;
+  display: none;
+}
+.filter-overlay.open { display: block; }
+
+/* Indicador ativo no FAB */
+.fab-active-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #E8001D;
+  display: none;
+  border: 1.5px solid #F4F4F6;
+}
+.fab-filter.has-filter .fab-active-dot { display: block; }
+
 </style>
 </head>
 <body>
@@ -833,18 +837,7 @@ body {
 
     <!-- TODAY PANEL -->
     <div class="today-panel" id="today-panel">
-      <!-- MINI BAR — visível só ao scrollar -->
-      <div class="mini-bar" id="mini-bar">
-        <div class="mini-accent" id="mini-accent"></div>
-        <div class="mini-content" id="mini-content">
-          <span class="mini-day" id="mini-day">—</span>
-          <span class="mini-event" id="mini-event">—</span>
-          <span class="mini-time" id="mini-time">—</span>
-        </div>
-      </div>
 
-      <!-- CONTEÚDO COMPLETO -->
-      <div class="panel-full" id="panel-full">
         <div class="today-accent" id="today-accent"></div>
         <div class="today-inner">
           <div class="today-left">
@@ -873,10 +866,11 @@ body {
           <button class="fb on" data-cat="all" onclick="toggleF('all')">Todos os eventos</button>
         </div>
       </div>
-      </div><!-- /panel-full -->
     </div>
 
-    <div id="cal" style="padding-top:12px"></div>
+    <!-- ÂNCORA DO FAB: quando sair da tela, FAB aparece -->
+    <div id="fab-anchor" style="height:1px;margin-top:4px"></div>
+    <div id="cal" style="padding-top:8px"></div>
 
   </div>
 
@@ -896,10 +890,24 @@ body {
   </div>
 </div>
 
-<!-- ═══ NAV ═══ -->
-<div class="bottom-nav" style="justify-content:center">
-  <button class="nav-btn active" id="nav-cal" onclick="goSection('cal')"><span class="nav-icon">📅</span><span class="nav-label">Calendário</span></button>
+
+
+<!-- FAB FILTROS -->
+<div class="filter-overlay" id="filter-overlay" onclick="closeFab()"></div>
+<div class="filter-panel" id="filter-panel">
+  <div class="filter-panel-title">Filtrar</div>
+  <button class="fp-btn" data-cat="sj"   onclick="fpToggle('sj')"><span class="fp-dot" style="background:#E8650A"></span>São João</button>
+  <button class="fp-btn" data-cat="copa" onclick="fpToggle('copa')"><span class="fp-dot" style="background:#009c3b"></span>Copa do Mundo</button>
+  <button class="fp-btn" data-cat="vnl"  onclick="fpToggle('vnl')"><span class="fp-dot" style="background:#00B4CC"></span>VNL Vôlei</button>
+  <button class="fp-btn" data-cat="f1"   onclick="fpToggle('f1')"><span class="fp-dot" style="background:#E8001D"></span>Fórmula 1</button>
+  <button class="fp-btn" data-cat="f2"   onclick="fpToggle('f2')"><span class="fp-dot" style="background:#5B2D8E"></span>Fórmula 2</button>
+  <button class="fp-btn" data-cat="pe"   onclick="fpToggle('pe')"><span class="fp-dot" style="background:#0033A0"></span>Futebol PE</button>
+  <button class="fp-btn on" data-cat="all" onclick="fpToggle('all')" style="background:#111;color:#fff;border-color:transparent">Todos</button>
 </div>
+<button class="fab-filter" id="fab-filter" onclick="toggleFab()">
+  <span style="font-size:18px">⚙︎</span>
+  <span class="fab-active-dot"></span>
+</button>
 
 <script>
 /* ═══════════════════════════════════
@@ -1750,10 +1758,10 @@ function render(fromFilter=false){
     });
   });
   if(!fromFilter&&TODAY){
-    requestAnimationFrame(()=>setTimeout(()=>{
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
       const el=document.getElementById('dc'+TODAY);
-      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
-    },800));
+      if(el) el.scrollIntoView({behavior:'auto',block:'start'});
+    }));
   }
 }
 
@@ -1788,7 +1796,7 @@ function renderHoje(){
 function goSection(s){
   const el=document.getElementById('sec-cal');
   if(el) el.style.display='block';
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:'instant'});
 }
 
 /* ═══════════════════════════════════
@@ -1800,60 +1808,78 @@ document.querySelector('.fb[data-cat="all"]').style.cssText='background:#111111;
 render();
 renderTodayPanel();
 
-// ── SCROLL COLLAPSE ──
+// ── FAB via IntersectionObserver na âncora ──
 (function(){
-  const panel = document.getElementById('today-panel');
-  const miniAccent = document.getElementById('mini-accent');
-  const miniDay = document.getElementById('mini-day');
-  const miniEvent = document.getElementById('mini-event');
-  const miniTime = document.getElementById('mini-time');
-  const THRESH_DOWN = 150;
-  const DELTA = 5;
-  let ticking = false;
-  let lastY = 0;
-  let isCompact = false;
-
-  function populateMini(){
-    const d = TODAY;
-    if(!d){ if(miniEvent) miniEvent.textContent='Junho 2026'; return; }
-    const evts = EV[d]||[];
-    const best = evts.find(e=>e.brasil) || evts.find(e=>e.destaque) || evts[0];
-    if(!best){ if(miniEvent) miniEvent.textContent='Dia livre'; return; }
-    const wd = new Date(2026,5,d).getDay();
-    const WDP = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    if(miniDay) miniDay.textContent = WDP[wd]+' '+d+'/06';
-    const shortTitle = best.title.replace(/^(🏆\s*)?(Grupo\s+\w+:\s*)/i,'').replace(/^Amistoso\s·\s/,'');
-    if(miniEvent) miniEvent.textContent = (best.brasil?'🇧🇷 ':best.destaque?'★ ':'')+shortTitle;
-    if(miniTime) miniTime.textContent = best.time||'';
-    const accentColor = best.brasil
-      ? (best.cat==='vnl'?'linear-gradient(90deg,#00B4CC,#FFE600)':'linear-gradient(90deg,#009c3b,#FFE600,#E8001D)')
-      : (DS[best.cat]?.color||'#888');
-    const acEl = document.getElementById('today-accent');
-    if(miniAccent) miniAccent.style.background = acEl ? acEl.style.background : accentColor;
-  }
-
-  function onScroll(){
-    if(ticking) return;
-    ticking = true;
-    requestAnimationFrame(()=>{
-      const y = window.scrollY;
-      const delta = y - lastY;
-      if(delta > DELTA && y > THRESH_DOWN && !isCompact){
-        isCompact = true;
-        panel.classList.add('compact');
-      } else if(delta < -DELTA && isCompact){
-        isCompact = false;
-        panel.classList.remove('compact');
-      }
-      lastY = y;
-      ticking = false;
-    });
-  }
-
-  populateMini();
-  lastY = window.scrollY;
-  window.addEventListener('scroll', onScroll, {passive:true});
+  const anchor = document.getElementById('fab-anchor');
+  if(!anchor) return;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const visible = entries[0].isIntersecting;
+      // Quando âncora sai da tela (not intersecting) → FAB aparece
+      // Quando âncora volta → FAB some e fecha painel
+      updateFab(!visible);
+    },
+    { threshold: 0, rootMargin: '0px' }
+  );
+  observer.observe(anchor);
 })();
+
+
+/* ── FAB FILTER ── */
+function toggleFab(){
+  const fab = document.getElementById('fab-filter');
+  const panel = document.getElementById('filter-panel');
+  const overlay = document.getElementById('filter-overlay');
+  const isOpen = panel.classList.contains('open');
+  if(isOpen){ closeFab(); }
+  else {
+    fab.classList.add('open');
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    syncFabButtons();
+  }
+}
+function closeFab(){
+  const f=document.getElementById('fab-filter');
+  const p=document.getElementById('filter-panel');
+  const o=document.getElementById('filter-overlay');
+  if(f) f.classList.remove('open');
+  if(p) p.classList.remove('open');
+  if(o) o.classList.remove('open');
+}
+function updateFab(compact){
+  const fab=document.getElementById('fab-filter');
+  if(!fab) return;
+  if(compact){
+    fab.classList.add('fab-visible');
+  } else {
+    fab.classList.remove('fab-visible');
+    closeFab();
+  }
+}
+function fpToggle(c){
+  // Usa a mesma lógica do toggleF existente
+  toggleF(c);
+  syncFabButtons();
+  // Atualiza dot indicador
+  const fab = document.getElementById('fab-filter');
+  if(active.has('all')) fab.classList.remove('has-filter');
+  else fab.classList.add('has-filter');
+}
+function syncFabButtons(){
+  document.querySelectorAll('.fp-btn').forEach(b=>{
+    const on = active.has(b.dataset.cat);
+    b.classList.toggle('on', on);
+    if(on){
+      if(b.dataset.cat==='all'){ b.style.background='#111'; b.style.color='#fff'; b.style.borderColor='transparent'; }
+      else {
+        const d=DS[b.dataset.cat]; if(d){ b.style.background=d.filBg; b.style.color='#fff'; b.style.borderColor='transparent'; }
+      }
+    } else {
+      b.style.background=''; b.style.color=''; b.style.borderColor='';
+    }
+  });
+}
 
 // Splash out
 setTimeout(()=>{
